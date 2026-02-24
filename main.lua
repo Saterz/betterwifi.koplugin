@@ -34,13 +34,6 @@ function BetterWifi:addToMainMenu(menu_items)
 	    end,
 	  }
 	},
-
-        -- a callback when tapping
-        callback = function()
-            UIManager:show(InfoMessage:new{
-                text = _("Hello, plugin world"),
-            })
-        end,
     }
 end
 
