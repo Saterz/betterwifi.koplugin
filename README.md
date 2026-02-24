@@ -1,0 +1,1 @@
+# betterwifi.koplugin
