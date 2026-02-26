@@ -2,6 +2,10 @@ local NetworkMgr = require("ui/network/manager")
 local InputDialog = require("ui/widget/inputdialog")
 local UIManager = require("ui/uimanager")
 local InfoMessage = require("ui/widget/infomessage")
+local LuaSettings = require("luasettings")
+local DataStorage = require("datastorage")
+local Device = require("device")
+local KindleNet = require("device/kindle")
 local _ = require("gettext")
 
 local Network = {}
@@ -62,6 +66,26 @@ function Network:connect_to_wifi(ssid, password)
     NetworkMgr:obtainIP()
     
     UIManager:show(InfoMessage:new{ text = ("Connected to %s"):format(ssid) })
+end
+
+function Network:forget_network(ssid)
+    local current_network = NetworkMgr:getCurrentNetwork()
+    if current_network and current_network.ssid == ssid then
+        NetworkMgr:disconnectNetwork(current_network)
+    end
+    
+    NetworkMgr:readNWSettings()
+    
+    NetworkMgr.nw_settings:delSetting(ssid)
+    NetworkMgr.nw_settings:flush()
+end
+
+function Network:getNearbyNetworkList()
+    if Device:isKindle() then
+        return KindleNet:getNetworkList() or {}
+    else
+        return NetworkMgr:getNetworkList() or {}
+    end
 end
 
 return Network

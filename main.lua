@@ -6,10 +6,6 @@ local NetworkMgr = require("ui/network/manager")
 local Network = require("network")
 local _ = require("gettext")
 
-local function nearby_networks()
-	return NetworkMgr:getNetworkList() or {}
-end
-
 local BetterWifi = WidgetContainer:extend{
     name = "betterwifi",
     is_doc_only = false,
@@ -29,13 +25,14 @@ local function network_details_dialog(network)
     
     local ssid = network.ssid or _("Hidden SSID")
     
-    local lines = {"SSID: " .. ssid}
-    if network.signal_level ~= nil then
-        table.insert(lines, "Signal level: " .. tostring(network.signal_level))
-    end
+    -- local lines = {
+    --     "SSID: " .. ssid,
+    --     "Signal level: " .. tostring(network.signal_level)
+    --    }
     
     UIManager:show(InfoMessage:new{
-        text = table.concat(lines, "\n")
+        -- text = table.concat(lines, "\n")
+        text = tostring(network)
     })
 end
 
@@ -47,6 +44,9 @@ local function manage_network_submenu(network)
         },
         {
             text = _("Connect"),
+            enabled_func = function()
+                return not network.connected
+            end,
             callback = function()
                 if network.password and #network.password > 0 then
                     Network:connect_to_wifi(
@@ -65,8 +65,11 @@ local function manage_network_submenu(network)
         },
         {
             text = _("Forget"),
+            -- enabled_func = function()
+            --     return network.password ~= nil
+            -- end,
             callback = function()
-                -- TODO: implement forgetting network functionality
+                Network:forget_network(network.ssid)
             end
         },
         {
@@ -81,13 +84,15 @@ local function manage_network_submenu(network)
 end
 
 local function nearby_list_submenu()
-	local networks = nearby_networks()
+	local networks = Network:getNearbyNetworkList()
 
 	local items = {}
 	for _, network in ipairs(networks) do
 		table.insert(items, {
 			text = network.ssid or _("Hidden SSID"),
-            sub_item_table = manage_network_submenu(network),
+            sub_item_table_func = function()
+                return manage_network_submenu(network)
+            end
 		})
 	end
 
