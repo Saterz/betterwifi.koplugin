@@ -87,11 +87,12 @@ local function nearby_list_submenu()
 	local networks = Network:getNearbyNetworkList()
 
 	local items = {}
-	for _, network in ipairs(networks) do
+	for i, network in ipairs(networks) do
+        local n = network
 		table.insert(items, {
-			text = network.ssid or _("Hidden SSID"),
+			text = n.ssid or _("Hidden SSID"),
             sub_item_table_func = function()
-                return manage_network_submenu(network)
+                return manage_network_submenu(n)
             end
 		})
 	end
