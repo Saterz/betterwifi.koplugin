@@ -1,14 +1,14 @@
 local NetworkMgr = require("ui/network/manager")
-local BtrNetworkMgr = require("network_mgr")
+local BetterWifiNetworkManager = require("network_mgr")
 local InputDialog = require("ui/widget/inputdialog")
 local UIManager = require("ui/uimanager")
 local InfoMessage = require("ui/widget/infomessage")
 local _ = require("gettext")
 
 -- Adaptation of KoReader's native NetworkItem object for BetterWifi
-local NetworkItem = {}
+local BetterWifiNetworkItem = {}
 
-function NetworkItem:new(info)
+function BetterWifiNetworkItem:new(info)
     local obj = {
         info = info
     }
@@ -17,16 +17,16 @@ function NetworkItem:new(info)
     return obj:init()
 end
 
-function NetworkItem:init()
+function BetterWifiNetworkItem:init()
     if not self.info.ssid then self.info.ssid = _("Hidden SSID") end
     self.text = self.info.ssid
     self.sub_item_table_func = function()
-        return self:manage_network_submenu()
+        return self:manageNetworkSubmenu()
     end
     return self
 end
 
-function NetworkItem:manage_network_submenu()
+function BetterWifiNetworkItem:manageNetworkSubmenu()
     local network = self.info
     
     local submenu = {
@@ -43,7 +43,7 @@ function NetworkItem:manage_network_submenu()
                 if network.password and #network.password > 0 then
                     self:connect()
                 else
-                    self:password_prompt(function(password)
+                    self:showPasswordPrompt(function(password)
                         network.password = password
                         self:connect()
                     end)
@@ -68,7 +68,7 @@ function NetworkItem:manage_network_submenu()
         {
             text = _("Info"),
             callback = function()
-                self:details_dialog()
+                self:showDetailsDialog()
             end
         }
     }
@@ -76,7 +76,7 @@ function NetworkItem:manage_network_submenu()
     return submenu
 end
 
-function NetworkItem:details_dialog()
+function BetterWifiNetworkItem:showDetailsDialog()
     local network = self.info
     local lines = {
         "SSID: " .. network.ssid,
@@ -90,7 +90,7 @@ function NetworkItem:details_dialog()
     })
 end
 
-function NetworkItem:password_prompt(on_submit)
+function BetterWifiNetworkItem:showPasswordPrompt(on_submit)
     local network = self.info
     
     local password_dialog = InputDialog:new {
@@ -124,9 +124,9 @@ function NetworkItem:password_prompt(on_submit)
     password_dialog:onShowKeyboard()
 end
 
-function NetworkItem:connect()
+function BetterWifiNetworkItem:connect()
     local network = self.info
-    local current_network = BtrNetworkMgr:getConnectedNetwork()
+    local current_network = BetterWifiNetworkManager:getConnectedNetwork()
     if current_network then
         current_network:disconnect()
     end
@@ -138,7 +138,7 @@ function NetworkItem:connect()
         NetworkMgr:obtainIP()
         text = _("Connected.")
         network.connected = true
-        BtrNetworkMgr:setConnectedNetwork(self)
+        BetterWifiNetworkManager:setConnectedNetwork(self)
     else
         text = err_msg or _("Connection failed.")
     end
@@ -146,7 +146,7 @@ function NetworkItem:connect()
     UIManager:show(InfoMessage:new { text = text, timeout = 3 })
 end
 
-function NetworkItem:disconnect()
+function BetterWifiNetworkItem:disconnect()
     local info = InfoMessage:new{text = _("Disconnecting…")}
     UIManager:show(info)
     UIManager:forceRePaint()
@@ -156,12 +156,12 @@ function NetworkItem:disconnect()
 
     UIManager:close(info)
     self.info.connected = false
-    BtrNetworkMgr:setConnectedNetwork(nil)
+    BetterWifiNetworkManager:setConnectedNetwork(nil)
 end
 
-function NetworkItem:forget()
+function BetterWifiNetworkItem:forget()
     NetworkMgr:deleteNetwork(self.info)
     self.info.password = nil
 end
 
-return NetworkItem
+return BetterWifiNetworkItem

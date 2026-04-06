@@ -3,7 +3,7 @@ local logger = require("logger")
 local ffi = require("ffi")
 local C = ffi.C
 
-local Kindle = {}
+local KindleNetworkBackend = {}
 
 local function kindleGetSavedNetworks()
     local haslipc, lipc = pcall(require, "libopenlipclua") -- use our lua lipc library with access to hasharray properties
@@ -169,48 +169,48 @@ local function kindleScanThenGetResults()
     end
 end
 
-function Kindle:getNetworkList()
-        local scan_list, err = kindleScanThenGetResults()
-        if not scan_list then
-            return nil, err
-        end
-
-         -- trick ui/widget/networksetting into displaying the correct signal strength icon
-        local qualities = {
-            [1] = 0,
-            [2] = 6,
-            [3] = 31,
-            [4] = 56,
-            [5] = 81
-        }
-
-        local network_list = {}
-        local saved_profiles = kindleGetSavedNetworks()
-        local current_profile = kindleGetCurrentProfile()
-        for _, network in ipairs(scan_list) do
-            local password = nil
-            if network.known == "yes" then
-                for _, p in ipairs(saved_profiles) do
-                    -- Earlier FW do not have a netid field at all, fall back to essid as that's the best we'll get (we don't get bssid either)...
-                    if (p.netid and p.netid == network.netid) or (p.netid == nil and p.essid == network.essid) then
-                        password = p.psk
-                        break
-                    end
-                end
-            end
-            table.insert(network_list, {
-                -- signal_level is purely for fun, the widget doesn't do anything with it. The WpaClient backend stores the raw dBa attenuation in it.
-                signal_level = string.format("%d/%d", network.signal, network.signal_max),
-                signal_quality = qualities[network.signal],
-                -- See comment above about netid being unfortunately optional...
-                connected = (current_profile.netid and current_profile.netid ~= -1 and current_profile.netid == network.netid)
-                         or (current_profile.netid == nil and current_profile.essid ~= "" and current_profile.essid == network.essid),
-                flags = network.key_mgmt,
-                ssid = network.essid ~= "" and network.essid,
-                password = password,
-            })
-        end
-        return network_list, nil
+function KindleNetworkBackend:getNetworkList()
+    local scan_list, err = kindleScanThenGetResults()
+    if not scan_list then
+        return nil, err
     end
 
-return Kindle
+    -- trick ui/widget/networksetting into displaying the correct signal strength icon
+    local qualities = {
+        [1] = 0,
+        [2] = 6,
+        [3] = 31,
+        [4] = 56,
+        [5] = 81
+    }
+
+    local network_list = {}
+    local saved_profiles = kindleGetSavedNetworks()
+    local current_profile = kindleGetCurrentProfile()
+    for _, network in ipairs(scan_list) do
+        local password = nil
+        if network.known == "yes" then
+            for _, p in ipairs(saved_profiles) do
+                -- Earlier FW do not have a netid field at all, fall back to essid as that's the best we'll get (we don't get bssid either)...
+                if (p.netid and p.netid == network.netid) or (p.netid == nil and p.essid == network.essid) then
+                    password = p.psk
+                    break
+                end
+            end
+        end
+        table.insert(network_list, {
+            -- signal_level is purely for fun, the widget doesn't do anything with it. The WpaClient backend stores the raw dBa attenuation in it.
+            signal_level = string.format("%d/%d", network.signal, network.signal_max),
+            signal_quality = qualities[network.signal],
+            -- See comment above about netid being unfortunately optional...
+            connected = (current_profile.netid and current_profile.netid ~= -1 and current_profile.netid == network.netid)
+                     or (current_profile.netid == nil and current_profile.essid ~= "" and current_profile.essid == network.essid),
+            flags = network.key_mgmt,
+            ssid = network.essid ~= "" and network.essid,
+            password = password,
+        })
+    end
+    return network_list, nil
+end
+
+return KindleNetworkBackend

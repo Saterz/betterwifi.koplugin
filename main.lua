@@ -2,8 +2,8 @@ local InfoMessage = require("ui/widget/infomessage")
 local UIManager = require("ui/uimanager")
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
 local NetworkMgr = require("ui/network/manager")
-local NetworkItem = require("network_item")
-local BtrNetworkMgr = require("network_mgr")
+local BetterWifiNetworkItem = require("network_item")
+local BetterWifiNetworkManager = require("network_mgr")
 local _ = require("gettext")
 
 local BetterWifi = WidgetContainer:extend{
@@ -15,15 +15,15 @@ function BetterWifi:init()
     self.ui.menu:registerToMainMenu(self)
 end
 
-local function nearby_list_submenu()
-	local networks = BtrNetworkMgr:getNearbyNetworkList()
+local function nearbyListSubmenu()
+    local networks = BetterWifiNetworkManager:getNearbyNetworkList()
 
-	local items = {}
-	for i, network in ipairs(networks) do
-		table.insert(items, NetworkItem:new(network))
-	end
+    local items = {}
+    for _, network in ipairs(networks) do
+        table.insert(items, BetterWifiNetworkItem:new(network))
+    end
 
-	return items
+    return items
 end
 
 function BetterWifi:addToMainMenu(menu_items)
@@ -47,7 +47,7 @@ function BetterWifi:addToMainMenu(menu_items)
           {
             text = _("Nearby networks"),
             sub_item_table_func = function()
-            	 return nearby_list_submenu()
+                 return nearbyListSubmenu()
             end,
             enabled_func = function()
                 return NetworkMgr:isWifiOn()

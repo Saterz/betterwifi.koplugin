@@ -1,25 +1,25 @@
-local KindleNet = require("device/kindle")
+local KindleNetworkBackend = require("device/kindle")
 local NetworkMgr = require("ui/network/manager")
 local Device = require("device")
 
-local BtrNetworkMgr = {
+local BetterWifiNetworkManager = {
     current_network = nil
 }
 
-function BtrNetworkMgr:getNearbyNetworkList()
+function BetterWifiNetworkManager:getNearbyNetworkList()
     if Device:isKindle() then
-        return KindleNet:getNetworkList() or {}
+        return KindleNetworkBackend:getNetworkList() or {}
     else
         return NetworkMgr:getNetworkList() or {}
     end
 end
 
-function BtrNetworkMgr:setConnectedNetwork(network)
+function BetterWifiNetworkManager:setConnectedNetwork(network)
     self.current_network = network
 end
 
-function BtrNetworkMgr:getConnectedNetwork()
+function BetterWifiNetworkManager:getConnectedNetwork()
     return self.current_network
 end
 
-return BtrNetworkMgr
+return BetterWifiNetworkManager
